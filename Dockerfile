@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM --platform=${BUILDPLATFORM} node:22.14.0-alpine
 
 FROM node:22.14.0-alpine AS base
@@ -25,10 +26,13 @@ ENV VITE_IS_HOSTED=1 \
     VITE_PUBLIC_BASENAME=${VITE_PUBLIC_BASENAME} \
     PROMPTFOO_REMOTE_API_BASE_URL=${PROMPTFOO_REMOTE_API_BASE_URL}
 
-COPY . .
 
+# Install dependencies
+COPY --link package.json package-lock.json ./
 RUN npm install --install-links --include=peer
 
+# Copy the rest of the application code
+COPY --link . .
 
 # Run npm install for the react app
 WORKDIR /app/src/app
@@ -39,8 +43,8 @@ RUN npm run build
 
 FROM base AS server
 WORKDIR /app
-COPY --from=builder --chown=promptfoo:promptfoo /app/node_modules ./node_modules
-COPY --from=builder --chown=promptfoo:promptfoo /app/dist ./dist
+COPY --link --from=builder --chown=promptfoo:promptfoo /app/node_modules ./node_modules
+COPY --link --from=builder --chown=promptfoo:promptfoo /app/dist ./dist
 
 RUN npm link promptfoo && \
     chown promptfoo:promptfoo /app/node_modules/promptfoo && \
