@@ -44,7 +44,7 @@ RUN npm run build
 FROM base AS server
 WORKDIR /app
 COPY --link --from=builder --chown=promptfoo:promptfoo /app/node_modules ./node_modules
-COPY --link --from=builder --chown=promptfoo:promptfoo /app/dist ./dist
+COPY --from=builder --chown=promptfoo:promptfoo /app/dist ./dist
 
 RUN npm link promptfoo && \
     chown promptfoo:promptfoo /app/node_modules/promptfoo && \
